@@ -1,6 +1,3 @@
-a kool Quantum_mycorrhizal_neural_network.html
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,15 +32,164 @@ a kool Quantum_mycorrhizal_neural_network.html
     let quantumFields = [];
 
     function resize() {
-        width = canvas.width = canvas.clientWidth;
-        height = canvas.height = canvas.clientHeight;
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
         centerX = width / 2;
         centerY = height / 2;
         initNetwork();
         initQuantumFields();
     }
 
-    // ... [rest of the JavaScript code remains the same] ...
+    function initNetwork() {
+        network = [];
+        for (let i = 0; i < 50; i++) {
+            network.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                connections: []
+            });
+        }
+        for (let node of network) {
+            for (let i = 0; i < 3; i++) {
+                let target = network[Math.floor(Math.random() * network.length)];
+                if (target !== node && !node.connections.includes(target)) {
+                    node.connections.push(target);
+                }
+            }
+        }
+    }
+
+    function initQuantumFields() {
+        quantumFields = [];
+        for (let i = 0; i < 5; i++) {
+            quantumFields.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 100 + 50,
+                frequency: Math.random() * 0.05 + 0.02
+            });
+        }
+    }
+
+    function drawNetwork() {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 0.5;
+        for (let node of network) {
+            for (let target of node.connections) {
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(target.x, target.y);
+                ctx.stroke();
+            }
+        }
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        for (let node of network) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function updateParticles() {
+        if (Math.random() < 0.1) {
+            let startNode = network[Math.floor(Math.random() * network.length)];
+            particles.push({
+                x: startNode.x,
+                y: startNode.y,
+                target: startNode.connections[Math.floor(Math.random() * startNode.connections.length)],
+                progress: 0,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`
+            });
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.progress += 0.02;
+            if (p.progress >= 1) {
+                if (p.target.connections.length > 0) {
+                    p.x = p.target.x;
+                    p.y = p.target.y;
+                    p.target = p.target.connections[Math.floor(Math.random() * p.target.connections.length)];
+                    p.progress = 0;
+                } else {
+                    particles.splice(i, 1);
+                }
+            } else {
+                let currentX = p.x + (p.target.x - p.x) * p.progress;
+                let currentY = p.y + (p.target.y - p.y) * p.progress;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    function drawQuantumFields() {
+        for (let field of quantumFields) {
+            let gradient = ctx.createRadialGradient(field.x, field.y, 0, field.x, field.y, field.radius);
+            gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+            gradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            field.x += Math.cos(time * field.frequency) * 2;
+            field.y += Math.sin(time * field.frequency) * 2;
+            field.x = (field.x + width) % width;
+            field.y = (field.y + height) % height;
+        }
+    }
+
+    function applyQuantumEffects() {
+        for (let node of network) {
+            for (let field of quantumFields) {
+                let dx = node.x - field.x;
+                let dy = node.y - field.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < field.radius) {
+                    let effect = (field.radius - distance) / field.radius;
+                    node.x += Math.cos(time * field.frequency) * effect * 2;
+                    node.y += Math.sin(time * field.frequency) * effect * 2;
+                }
+            }
+            node.x = (node.x + width) % width;
+            node.y = (node.y + height) % height;
+        }
+    }
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, width, height);
+
+        drawQuantumFields();
+        applyQuantumEffects();
+        drawNetwork();
+        updateParticles();
+
+        time += 0.01;
+        requestAnimationFrame(draw);
+    }
+
+    function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        quantumFields.push({
+            x: touch.clientX,
+            y: touch.clientY,
+            radius: Math.random() * 100 + 50,
+            frequency: Math.random() * 0.05 + 0.02
+        });
+        if (quantumFields.length > 10) {
+            quantumFields.shift();
+        }
+    }
+
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
 
     window.addEventListener('resize', resize);
     resize();
